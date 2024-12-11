@@ -1,2 +1,2 @@
-# NetRUn
+# NetRun
 Wi-Fi scan tool
