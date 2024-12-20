@@ -10,6 +10,7 @@ from modules.sip import NetworkScanner
 import threading
 import platform
 from scapy.all import conf
+from modules.web_interface import start_web_interface
 
 class NetRun:
     """
@@ -21,6 +22,7 @@ class NetRun:
         self.agreement_log = "user_agreement_log.txt"  # Файл для юридической защиты(я не юрист)
         self.scanner: Optional[NetworkScanner] = None
         self.analyzer: Optional[PacketAnalyzer] = None
+        self.web_interface_started = False
         
         logging.basicConfig(
             level=logging.INFO,
@@ -42,6 +44,11 @@ class NetRun:
             
             self.scanner = NetworkScanner()
             self.analyzer = PacketAnalyzer()
+            
+            if not self.web_interface_started:
+                start_web_interface(self.scanner, self.analyzer)
+                self.web_interface_started = True
+            
             async with self.scanner:
                 await self.scanner.__aenter__()
             
@@ -59,7 +66,7 @@ class NetRun:
                 await self.scanner.__aexit__(None, None, None)
                 if self.analyzer:
                     await self.analyzer.close_session()
-                    await asyncio.sleep(0.1)
+                await asyncio.sleep(0.1)
             except Exception as e:
                 logging.error(f"Error during cleanup: {e}")
 
@@ -97,7 +104,7 @@ class NetRun:
         
         consent = input("\nСогласны с условиями? (да/нет): ").strip().lower()
         if consent != "да":
-            logging.warning("Пользователь отказался от соглашения")
+            logging.warning("��ользователь отказался от соглашения")
             return False
             
         self._log_agreement()
@@ -128,7 +135,7 @@ class NetRun:
                     print(colored("\nЗавершение работы...", "yellow"))
                     break
                 else:
-                    print(colored("Неверный выбор. Попробуйте снова.", "red"))
+                    print(colored("Неверный выбор. Поп��обуйте снова.", "red"))
                     
             except KeyboardInterrupt:
                 print(colored("\nПринудительное завершение...", "yellow"))
@@ -167,7 +174,7 @@ class NetRun:
             print(f"4. Интервал очистки кэша (сек): {self.config.CACHE_CLEANUP_INTERVAL}")
             print("0. Назад")
 
-            choice = input("\nВыберите па��аметр для изменения: ").strip()
+            choice = input("\nВыберите параметр для изменения: ").strip()
 
             try:
                 if choice == "1":
@@ -208,8 +215,6 @@ async def main():
     
     try:
         await netrun.initialize()
-        
-        # Start web interface in a separate thread
         
         await netrun.menu()
     except Exception as e:
