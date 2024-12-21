@@ -1,0 +1,11 @@
+scapy>=2.5.0
+termcolor>=2.3.0
+asyncio>=3.4.3
+typing>=3.7.4.3
+logging>=0.5.1.2
+platform>=0.1.0
+datetime>=5.2
+aiohttp>=3.8.5
+colorama>=0.4.6 
+rich>=13.7.0     
+flask

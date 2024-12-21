@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>NetRun - Хакерская Консоль</title>
+    <style>
+        /* Импортируем современные шрифты */
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            /* Обновленная цветовая схема */
+            --main-bg: #0c1016;
+            --text-color: #7af3db;
+            --accent-color: #36a3ff;
+            --grid-color: #1a1f26;
+            --cyber-blue: #4d88ff;
+            --neon-purple: #9d4edd;
+            --warning-red: #ff4757;
+            
+            /* Обновленные эффекты */
+            --glass-effect: rgba(122, 243, 219, 0.03);
+            --panel-border: 1px solid rgba(122, 243, 219, 0.2);
+            --text-shadow: 0 0 8px rgba(122, 243, 219, 0.3);
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.6;
+            background: var(--main-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .panel {
+            background: rgba(12, 16, 22, 0.7);
+            border: var(--panel-border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 4px;
+            transition: transform 0.3s ease;
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                45deg,
+                transparent 0%,
+                rgba(0, 255, 0, 0.05) 50%,
+                transparent 100%
+            );
+            animation: scan 2s linear infinite;
+        }
+
+        .panel:hover {
+            transform: translateY(-2px);
+        }
+
+        .title {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 2.5em;
+            text-shadow: var(--text-shadow);
+            letter-spacing: 2px;
+            color: var(--text-color);
+            border-bottom: 1px solid rgba(122, 243, 219, 0.2);
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+
+        .data-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .data-item {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+        }
+
+        .data-item:before {
+            content: '> ';
+            color: var(--accent-color);
+        }
+
+        @keyframes scan {
+            0% { 
+                transform: translateY(-100%);
+                opacity: 0.3;
+            }
+            100% { 
+                transform: translateY(100%);
+                opacity: 0;
+            }
+        }
+
+        #network-map {
+            height: 400px;
+            background: rgba(0, 255, 0, 0.05);
+            border: 1px solid var(--text-color);
+        }
+
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, 
+                var(--grid-color) 0%, 
+                rgba(26, 26, 26, 0.9) 50%,
+                var(--grid-color) 100%
+            );
+            backdrop-filter: blur(5px);
+            border-top: 1px solid var(--text-color);
+            padding: 5px 20px;
+            font-size: 0.9em;
+        }
+
+        .blink {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .control-panel {
+            margin-bottom: 20px;
+        }
+
+        .button {
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            background: var(--grid-color);
+            color: var(--text-color);
+            border: 1px solid rgba(122, 243, 219, 0.3);
+            padding: 8px 16px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .button:hover {
+            background: rgba(122, 243, 219, 0.1);
+            border-color: var(--text-color);
+        }
+
+        .button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent,
+                rgba(255, 255, 255, 0.1),
+                transparent
+            );
+            transform: rotate(45deg);
+            transition: 0.5s;
+        }
+
+        .button:hover::after {
+            left: 100%;
+        }
+
+        .loading {
+            color: var(--cyber-blue);
+        }
+
+        .scan-controls, .analysis-controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 255, 0, 0.05);
+            border: 1px solid var(--text-color);
+        }
+
+        .input {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(12, 16, 22, 0.8);
+            border-radius: 3px;
+            transition: all 0.2s ease;
+            color: var(--text-color);
+            border: 1px solid rgba(122, 243, 219, 0.2);
+            padding: 8px;
+            margin: 5px;
+            width: 250px;
+        }
+
+        .input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(54, 163, 255, 0.2);
+            border-color: var(--accent-color);
+        }
+
+        select.input {
+            cursor: pointer;
+        }
+
+        .console-output {
+            font-family: 'Share Tech Mono', monospace;
+            line-height: 1.4;
+            text-shadow: 0 0 5px var(--text-color);
+            padding: 10px;
+            background: rgba(12, 16, 22, 0.8);
+            border-radius: 5px;
+            border: 1px solid rgba(122, 243, 219, 0.2);
+            color: var(--text-color);
+        }
+
+        .ascii-header {
+            color: var(--accent-color);
+            margin: 0 0 15px 0;
+            font-size: 0.9em;
+        }
+
+        .highlight {
+            color: var(--text-color);
+            font-weight: bold;
+            text-shadow: var(--text-shadow);
+        }
+
+        .device-entry, .packet-entry {
+            margin-bottom: 12px;
+            padding: 8px;
+            border-left: 2px solid var(--accent-color);
+        }
+
+        .prompt {
+            color: var(--accent-color);
+            margin-right: 10px;
+        }
+
+        .device-details, .packet-details {
+            margin-left: 25px;
+            padding: 5px 0;
+        }
+
+        .label {
+            color: #888;
+            margin-right: 5px;
+        }
+
+        .value {
+            color: var(--text-color);
+        }
+
+        .ports-section {
+            margin-top: 5px;
+            margin-left: 15px;
+        }
+
+        .port-entry {
+            color: #00aaff;
+            margin-left: 20px;
+        }
+
+        .protocol {
+            color: #ff3366;
+            font-weight: bold;
+        }
+
+        .arrow {
+            color: var(--accent-color);
+            margin: 0 10px;
+        }
+
+        .flags {
+            color: #888;
+            font-size: 0.9em;
+            margin-left: 20px;
+        }
+
+        .scrollable-results {
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .scrollable-results::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollable-results::-webkit-scrollbar-track {
+            background: var(--main-bg);
+        }
+
+        .scrollable-results::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 4px;
+        }
+
+        .loading-more {
+            text-align: center;
+            padding: 10px;
+            color: var(--accent-color);
+        }
+
+        .tabs {
+            margin-bottom: 20px;
+            border-bottom: var(--panel-border);
+        }
+
+        .tab-button {
+            font-family: 'JetBrains Mono', monospace;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1.1em;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button:hover {
+            color: var(--accent-color);
+        }
+
+        .tab-button.active {
+            color: var(--accent-color);
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--accent-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 15px;
+        }
+
+        .stats-card {
+            background: var(--glass-effect);
+            border: var(--panel-border);
+            padding: 15px;
+            border-radius: 4px;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stats-content {
+            margin-top: 10px;
+            overflow-y: auto;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(122, 243, 219, 0.1);
+            align-items: center;
+        }
+
+        .stat-label {
+            color: var(--accent-color);
+            flex: 1;
+        }
+
+        .stat-value {
+            color: var(--text-color);
+            text-align: right;
+            min-width: 50px;
+            margin-right: 10px;
+        }
+
+        .progress-bar {
+            flex: 2;
+            height: 4px;
+            background: var(--grid-color);
+            margin-left: 10px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-color);
+            transition: width 0.3s ease;
+        }
+
+        .chart-container {
+            flex: 1;
+            position: relative;
+            min-height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">NetRun - Система Мониторинга</h1>
+    
+    <div class="tabs">
+        <button class="tab-button active" onclick="switchTab('scan')">Сканирование сети</button>
+        <button class="tab-button" onclick="switchTab('sniff')">Анализ трафика</button>
+        <button class="tab-button" onclick="switchTab('stats')">Статистика</button>
+    </div>
+
+    <div id="scan-tab" class="tab-content active">
+        <div class="control-panel">
+            <div class="scan-controls">
+                <h3>Настройки сканирования</h3>
+                <input type="text" id="ip-range" value="192.168.0.1-20" class="input" placeholder="Диапазон IP (например: 192.168.0.1-20)">
+                <input type="text" id="ports" value="22" class="input" placeholder="Порт (например: 22)">
+                <button class="button" onclick="startScanning()">Сканировать сеть</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Обнаруженные устройства</h2>
+            <div id="scan-results"></div>
+        </div>
+    </div>
+
+    <div id="sniff-tab" class="tab-content">
+        <div class="control-panel">
+            <div class="analysis-controls">
+                <h3>Настройки анализа</h3>
+                <select id="interface" class="input">
+                    <option value="enp42s0">enp42s0</option>
+                </select>
+                <select id="protocol" class="input">
+                    <option value="">Все протоколы</option>
+                    <option value="TCP">TCP</option>
+                    <option value="UDP">UDP</option>
+                    <option value="ICMP">ICMP</option>
+                </select>
+                <button class="button" onclick="startAnalysis()">Анализировать трафик</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Анализ трафика</h2>
+            <div id="analysis-results" class="scrollable-results"></div>
+        </div>
+    </div>
+
+    <div id="stats-tab" class="tab-content">
+        <div class="panel">
+            <h2>Сетевая статистика</h2>
+            <div class="stats-grid">
+                <div class="stats-card">
+                    <h3>Общая статистика</h3>
+                    <div id="general-stats" class="stats-content"></div>
+                </div>
+                <div class="stats-card">
+                    <h3>Топ протоколов</h3>
+                    <div id="protocol-stats" class="stats-content"></div>
+                </div>
+                <div class="stats-card">
+                    <h3>Активные хосты</h3>
+                    <div id="host-stats" class="stats-content"></div>
+                </div>
+                <div class="stats-card">
+                    <h3>График активности</h3>
+                    <div class="chart-container">
+                        <canvas id="traffic-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Загрузка доступны интерфейсов при загрузке страницы
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/api/get_interfaces');
+                const data = await response.json();
+                if (data.status === 'success') {
+                    const select = document.getElementById('interface');
+                    data.data.forEach(iface => {
+                        const option = document.createElement('option');
+                        option.value = iface;
+                        option.textContent = iface;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки интерфейсов:', error);
+            }
+        });
+
+        async function startScanning() {
+            try {
+                const ipRange = document.getElementById('ip-range').value;
+                const ports = document.getElementById('ports').value;
+                
+                if (!ipRange) {
+                    throw new Error('Укажите диапазон IP');
+                }
+                
+                document.getElementById('scan-results').innerHTML = 
+                    '<p class="loading">Идет сканирование сети...</p>';
+                
+                const response = await fetch('/api/scan_network', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ip_range: ipRange,
+                        ports: ports
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    document.getElementById('scan-results').innerHTML = 
+                        formatScanResults(data.data);
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                document.getElementById('scan-results').innerHTML = 
+                    `<p style="color: var(--accent-color)">Ошибка: ${error.message}</p>`;
+            }
+        }
+
+        let currentPage = 1;
+        let isLoading = false;
+        let hasMore = true;
+        let analysisContainer;
+
+        // Добавьте после загрузки страницы
+        window.addEventListener('load', () => {
+            analysisContainer = document.getElementById('analysis-results');
+            analysisContainer.addEventListener('scroll', handleScroll);
+        });
+
+        function handleScroll() {
+            if (isLoading || !hasMore) return;
+            
+            const threshold = 100; // пикселей до конца прокрутки
+            if (analysisContainer.scrollHeight - analysisContainer.scrollTop - analysisContainer.clientHeight < threshold) {
+                loadMorePackets();
+            }
+        }
+
+        async function loadMorePackets() {
+            if (isLoading || !hasMore) return;
+            
+            isLoading = true;
+            const interface = document.getElementById('interface').value;
+            const protocol = document.getElementById('protocol').value;
+            
+            try {
+                const response = await fetch('/api/analyze_traffic', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        interface: interface,
+                        protocol: protocol,
+                        page: currentPage,
+                        per_page: 20
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    if (currentPage === 1) {
+                        analysisContainer.innerHTML = formatAnalysisResults(data.data);
+                    } else {
+                        // Добавляем новые пакеты к существующим
+                        const existingContent = analysisContainer.querySelector('.console-output');
+                        existingContent.insertAdjacentHTML('beforeend', formatPackets(data.data));
+                    }
+                    
+                    hasMore = data.has_more;
+                    currentPage++;
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки пакетов:', error);
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        async function startAnalysis() {
+            currentPage = 1;
+            hasMore = true;
+            await loadMorePackets();
+        }
+
+        function formatScanResults(results) {
+            if (!results || results.length === 0) {
+                return `<div class="console-output">
+                    <p style="color: #ff0000;">Ошибка: Нет результатов сканирования</p>
+                </div>`;
+            }
+            
+            return `<div class="console-output">
+                <pre class="ascii-header">
+╔══════════════════ NETWORK SCAN RESULTS ═══════════════��══╗
+║                                                          ║
+║  <span class="highlight">[ Detected Devices: ${results.length} ]</span>                          ║
+╚══════════════════════════════════════════════════════════╝</pre>
+                ${results.map(device => `
+                <div class="device-entry">
+                    <span class="prompt">[*]</span> Device detected:
+                    <div class="device-details">
+                        <span class="label">IPv4:</span> <span class="value">${device.ip}</span>
+                        <span class="label">MAC:</span> <span class="value">${device.mac}</span>
+                        <span class="label">Host:</span> <span class="value">${device.hostname}</span>
+                        ${device.ports && device.ports.length ? `
+                        <div class="ports-section">
+                            <span class="prompt">[+]</span> Open ports:
+                            ${device.ports.map(port => `
+                                <div class="port-entry">└── ${port}</div>
+                            `).join('')}
+                        </div>` : ''}
+                    </div>
+                </div>`).join('')}
+            </div>`;
+        }
+
+        function formatAnalysisResults(results) {
+            return `<div class="console-output">
+                <pre class="ascii-header">
+╔═════════════════ TRAFFIC ANALYSIS LOG ══════════════════╗
+║                                                         ║
+║  <span class="highlight">[ Live Traffic Analysis ]</span>                          ║
+╚═══════════════════════════════════════════════════════════╝</pre>
+                ${formatPackets(results)}
+            </div>`;
+        }
+
+        function formatPackets(packets) {
+            return packets.map(packet => `
+                <div class="packet-entry">
+                    <span class="prompt">[>]</span> Packet captured:
+                    <div class="packet-details">
+                        <span class="protocol">${packet.protocol}</span> 
+                        ${packet.src} <span class="arrow">──></span> ${packet.dst}
+                        <div class="flags">${packet.flags ? `Flags: ${packet.flags}` : ''}</div>
+                    </div>
+                </div>`).join('');
+        }
+
+        function switchTab(tabName) {
+            // Скрываем все вкладки
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Убираем активный класс у всех кнопок
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Показываем выбранную вкладку
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Делаем кнопку активной
+            event.target.classList.add('active');
+            
+            if (tabName === 'stats') {
+                updateStats();
+                // Обновляем статистику каждые 5 секунд
+                if (!window.statsInterval) {
+                    window.statsInterval = setInterval(updateStats, 5000);
+                }
+            } else {
+                clearInterval(window.statsInterval);
+                window.statsInterval = null;
+            }
+        }
+
+        let trafficChart = null;
+
+        async function updateStats() {
+            try {
+                const response = await fetch('/api/network_stats');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    updateGeneralStats(data.data.general);
+                    updateProtocolStats(data.data.protocols);
+                    updateHostStats(data.data.hosts);
+                    updateTrafficChart(data.data.traffic_history);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки статистики:', error);
+            }
+        }
+
+        function updateGeneralStats(stats) {
+            const container = document.getElementById('general-stats');
+            container.innerHTML = `
+                <div class="stat-item">
+                    <span class="stat-label">Всего пакетов:</span>
+                    <span class="stat-value">${stats.total_packets}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Объём данных:</span>
+                    <span class="stat-value">${formatBytes(stats.total_bytes)}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Активных хостов:</span>
+                    <span class="stat-value">${stats.active_hosts}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Средняя нагрузка:</span>
+                    <span class="stat-value">${stats.avg_bandwidth}/с</span>
+                </div>
+            `;
+        }
+
+        function updateProtocolStats(protocols) {
+            const container = document.getElementById('protocol-stats');
+            const maxValue = Math.max(...protocols.map(p => p.count));
+            
+            container.innerHTML = protocols.map(protocol => `
+                <div class="stat-item">
+                    <span class="stat-label">${protocol.name.toUpperCase().padEnd(8)}</span>
+                    <span class="stat-value">${protocol.count.toString().padStart(3)}</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${(protocol.count / maxValue) * 100}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateHostStats(hosts) {
+            const container = document.getElementById('host-stats');
+            container.innerHTML = hosts.map(host => `
+                <div class="stat-item">
+                    <span class="stat-label">${host.ip}</span>
+                    <span class="stat-value">${formatBytes(host.bytes)}</span>
+                </div>
+            `).join('');
+        }
+
+        function updateTrafficChart(history) {
+            const ctx = document.getElementById('traffic-chart').getContext('2d');
+            
+            if (trafficChart) {
+                trafficChart.destroy();
+            }
+
+            trafficChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: history.map(h => h.time),
+                    datasets: [{
+                        label: 'Трафик (байт/с)',
+                        data: history.map(h => h.bytes),
+                        borderColor: 'rgb(54, 163, 255)',
+                        backgroundColor: 'rgba(54, 163, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 0 // Отключаем анимацию для более плавного обновления
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#7af3db'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true, // Начинаем с нуля
+                            suggestedMax: Math.max(...history.map(h => h.bytes)) * 1.1, // Максиму�� + 10%
+                            ticks: { 
+                                color: '#7af3db',
+                                callback: function(value) {
+                                    return formatBytes(value);
+                                }
+                            },
+                            grid: { color: 'rgba(122, 243, 219, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#7af3db' },
+                            grid: { color: 'rgba(122, 243, 219, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html> 
